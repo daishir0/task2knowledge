@@ -1,10 +1,17 @@
 ## Overview
-task2knowledge is a Python script that processes tasks from the LLMKnowledge2 system database using various LLM models (OpenAI GPT, Anthropic Claude, DeepSeek). It automatically retrieves pending tasks, processes them using AI, and stores the results as knowledge entries in the database. The script includes features such as text chunking, language detection, and comprehensive logging.
+task2knowledge is a Python script that processes tasks from the LLMKnowledge2 system database using various LLM models. It supports both cloud-based LLMs (OpenAI GPT, Anthropic Claude, DeepSeek) and local LLMs (LMStudio, Ollama, vLLM). The script automatically retrieves pending tasks, processes them using AI, and stores the results as knowledge entries in the database.
 
 ## Supported LLM Models
+
+### Cloud-based LLMs
 - OpenAI: gpt-4o, gpt-4o-mini (default)
 - Anthropic: claude-3-5-sonnet-latest, claude-3-5-haiku-latest
 - DeepSeek: deepseek-chat, deepseek-reasoner
+
+### Local LLMs
+- LMStudio (OpenAI compatible API)
+- Ollama
+- vLLM (OpenAI compatible API)
 
 ## Installation
 1. Clone the repository:
@@ -26,42 +33,73 @@ pip install -r requirements.txt
    - Edit config.yaml to set:
      - Database path
      - Basic parameters
-     - API keys for your LLM models
+     - API keys (for cloud-based LLMs)
+     - Local LLM endpoints and parameters
      - Your preferred default model
 
 ## Configuration
-The config.yaml file contains all configurable settings:
+The config.yaml file contains all configurable settings. Here are some example configurations:
 
+### Using Cloud-based LLMs
 ```yaml
-# Database settings
-database:
-  path: /path/to/your/database.db
-
-# Basic parameters
-parameters:
-  chunk_size: 2000        # Minimum characters per chunk
-  max_chunk_size: 3000    # Maximum characters per chunk
-  max_retries: 5          # API retry count
-  retry_delay: 5          # Retry interval (seconds)
-  api_rate_limit: 0.5     # API call interval (seconds)
-  debug_mode: false       # Debug mode toggle
-
-# LLM model settings
 models:
   openai:
     gpt-4o:
       provider: openai
       model_name: gpt-4o
       api_key: your-openai-api-key-here
-    gpt-4o-mini:
-      provider: openai
-      model_name: gpt-4o-mini
-      api_key: your-openai-api-key-here
-  # ... other models
 
-# Default model setting
-default_model: gpt-4o-mini
+default_model: gpt-4o
 ```
+
+### Using LMStudio (Local LLM)
+```yaml
+models:
+  local:
+    lmstudio:
+      provider: openai_compatible
+      model_name: local_model
+      endpoint: http://localhost:1234/v1
+      api_key: not-needed
+      parameters:
+        temperature: 0.7
+        max_tokens: 4096
+        top_p: 0.95
+
+default_model: lmstudio
+```
+
+### Using Ollama (Local LLM)
+```yaml
+models:
+  local:
+    ollama:
+      provider: ollama
+      model_name: llama2
+      endpoint: http://localhost:11434/api/generate
+      parameters:
+        temperature: 0.7
+        context_length: 4096
+
+default_model: ollama
+```
+
+## Local LLM Setup
+
+### Using with LMStudio
+1. Install and launch LMStudio
+2. Load your preferred model
+3. Enable OpenAI compatible API server (default port: 1234)
+4. Configure task2knowledge to use LMStudio:
+   - Set appropriate endpoint in config.yaml
+   - Set default_model to your LMStudio configuration name
+
+### Using with Ollama
+1. Install Ollama
+2. Pull your preferred model: `ollama pull llama2`
+3. Configure task2knowledge to use Ollama:
+   - Set appropriate endpoint in config.yaml
+   - Set default_model to your Ollama configuration name
 
 ## Usage
 1. Run the script directly:
@@ -80,7 +118,7 @@ crontab -e
 
 The script will:
 - Fetch pending tasks from the database
-- Process text using the configured LLM model
+- Process text using the configured LLM (cloud-based or local)
 - Save results as knowledge entries
 - Log all operations to task2knowledge.log
 
@@ -90,8 +128,8 @@ The script will:
 - Implements retry mechanism for API calls
 - Maintains detailed logs in the script's directory
 - Requires access to LLMKnowledge2 system database
-- Configuration is now externalized in config.yaml
-- Supports multiple LLM providers and models
+- Configuration is externalized in config.yaml
+- Supports multiple LLM providers and models (both cloud and local)
 - Supports parallel processing through run_task2knowledge.sh
 
 ## License
@@ -102,12 +140,19 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 # task2knowledge
 
 ## 概要
-task2knowledgeは、LLMKnowledge2システムのデータベースからタスクを処理するPythonスクリプトです。OpenAI GPT、Anthropic Claude、DeepSeekなど、様々なLLMモデルを使用して、保留中のタスクを自動的に取得し、AI処理を行い、その結果をナレッジとしてデータベースに保存します。テキストの分割処理、言語検出、包括的なログ機能を備えています。
+task2knowledgeは、LLMKnowledge2システムのデータベースからタスクを処理するPythonスクリプトです。クラウドベースのLLM（OpenAI GPT、Anthropic Claude、DeepSeek）とローカルLLM（LMStudio、Ollama、vLLM）の両方をサポートし、保留中のタスクを自動的に取得し、AI処理を行い、その結果をナレッジとしてデータベースに保存します。
 
 ## 対応LLMモデル
+
+### クラウドベースLLM
 - OpenAI: gpt-4o, gpt-4o-mini（デフォルト）
 - Anthropic: claude-3-5-sonnet-latest, claude-3-5-haiku-latest
 - DeepSeek: deepseek-chat, deepseek-reasoner
+
+### ローカルLLM
+- LMStudio（OpenAI互換API）
+- Ollama
+- vLLM（OpenAI互換API）
 
 ## インストール方法
 1. レポジトリをクローンします：
@@ -129,42 +174,73 @@ pip install -r requirements.txt
    - config.yamlを編集して以下を設定します：
      - データベースパス
      - 基本パラメーター
-     - 使用するLLMモデルのAPIキー
+     - APIキー（クラウドベースLLM用）
+     - ローカルLLMのエンドポイントとパラメーター
      - デフォルトのモデル
 
 ## 設定
-config.yamlファイルには以下の設定が含まれています：
+config.yamlファイルには以下のような設定が含まれます：
 
+### クラウドベースLLMを使用する場合
 ```yaml
-# データベース設定
-database:
-  path: /path/to/your/database.db
-
-# 基本パラメーター
-parameters:
-  chunk_size: 2000        # 1チャンクの最小文字数
-  max_chunk_size: 3000    # 1チャンクの最大文字数
-  max_retries: 5          # APIリトライ回数
-  retry_delay: 5          # リトライ間隔（秒）
-  api_rate_limit: 0.5     # API呼び出し間隔（秒）
-  debug_mode: false       # デバッグモードの有効無効
-
-# LLMモデル設定
 models:
   openai:
     gpt-4o:
       provider: openai
       model_name: gpt-4o
       api_key: your-openai-api-key-here
-    gpt-4o-mini:
-      provider: openai
-      model_name: gpt-4o-mini
-      api_key: your-openai-api-key-here
-  # ... その他のモデル
 
-# デフォルトモデル設定
-default_model: gpt-4o-mini
+default_model: gpt-4o
 ```
+
+### LMStudio（ローカルLLM）を使用する場合
+```yaml
+models:
+  local:
+    lmstudio:
+      provider: openai_compatible
+      model_name: local_model
+      endpoint: http://localhost:1234/v1
+      api_key: not-needed
+      parameters:
+        temperature: 0.7
+        max_tokens: 4096
+        top_p: 0.95
+
+default_model: lmstudio
+```
+
+### Ollama（ローカルLLM）を使用する場合
+```yaml
+models:
+  local:
+    ollama:
+      provider: ollama
+      model_name: llama2
+      endpoint: http://localhost:11434/api/generate
+      parameters:
+        temperature: 0.7
+        context_length: 4096
+
+default_model: ollama
+```
+
+## ローカルLLMのセットアップ
+
+### LMStudioを使用する場合
+1. LMStudioをインストールして起動
+2. 使用したいモデルをロード
+3. OpenAI互換APIサーバーを有効化（デフォルトポート：1234）
+4. task2knowledgeの設定：
+   - config.yamlで適切なエンドポイントを設定
+   - default_modelをLMStudioの設定名に設定
+
+### Ollamaを使用する場合
+1. Ollamaをインストール
+2. 使用したいモデルを取得：`ollama pull llama2`
+3. task2knowledgeの設定：
+   - config.yamlで適切なエンドポイントを設定
+   - default_modelをOllamaの設定名に設定
 
 ## 使い方
 1. スクリプトを直接実行：
@@ -183,7 +259,7 @@ crontab -e
 
 スクリプトは以下の処理を行います：
 - データベースから保留中のタスクを取得
-- 設定されたLLMモデルを使用してテキスト処理
+- 設定されたLLM（クラウドまたはローカル）を使用してテキスト処理
 - 結果をナレッジとして保存
 - すべての操作をtask2knowledge.logに記録
 
@@ -194,7 +270,7 @@ crontab -e
 - スクリプトのディレクトリに詳細なログを保持
 - LLMKnowledge2システムのデータベースへのアクセスが必要
 - 設定はconfig.yamlに外部化
-- 複数のLLMプロバイダーとモデルに対応
+- 複数のLLMプロバイダーとモデルに対応（クラウド・ローカル両方）
 - run_task2knowledge.shによる並列処理に対応
 
 ## ライセンス

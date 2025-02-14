@@ -40,6 +40,32 @@ models:
       provider: deepseek
       model_name: deepseek-reasoner
       api_key: your-deepseek-api-key-here
+  local:
+    lmstudio:
+      provider: openai_compatible  # OpenAI互換APIを使用
+      model_name: local_model     # モデル名は任意
+      endpoint: http://localhost:1234/v1  # LMStudioのデフォルトポート
+      api_key: not-needed        # LMStudioではAPIキー不要
+      parameters:
+        temperature: 0.7
+        max_tokens: 4096
+        top_p: 0.95
+    ollama:
+      provider: ollama
+      model_name: ollama
+      endpoint: http://localhost:11434/api/generate
+      parameters:
+        temperature: 0.7
+        context_length: 4096
+    vllm:
+      provider: openai_compatible
+      model_name: vllm
+      endpoint: http://localhost:8080/v1
+      api_key: not-needed
+      parameters:
+        temperature: 0.7
+        max_tokens: 4096
+        top_p: 0.95
 
 # デフォルトモデル設定
 default_model: gpt-4o-mini

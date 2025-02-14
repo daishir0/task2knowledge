@@ -152,8 +152,8 @@ class LLMClient:
     """LLMクライアントの基底クラス"""
     def __init__(self, model_config):
         self.model_config = model_config
-        self.api_key = model_config['api_key']
-        if not self.api_key:
+        self.api_key = model_config.get('api_key')
+        if not self.api_key and self.model_config['provider'] not in ['openai_compatible', 'ollama']:
             raise ValueError(f"API key not found in config for model: {model_config['model_name']}")
 
     def call_api(self, prompt, text):
@@ -174,6 +174,51 @@ class OpenAIClient(LLMClient):
             ]
         )
         return completion.choices[0].message.content
+
+class OpenAICompatibleClient(LLMClient):
+    """OpenAI互換APIクライアント（LMStudio, vLLM等）"""
+    def __init__(self, model_config):
+        super().__init__(model_config)
+        self.client = openai.OpenAI(
+            base_url=model_config['endpoint'],
+            api_key=model_config.get('api_key', 'not-needed')
+        )
+        self.parameters = model_config.get('parameters', {})
+
+    def call_api(self, prompt, text):
+        request_content = f"{prompt}\n\n{text}"
+        completion = self.client.chat.completions.create(
+            model=self.model_config['model_name'],
+            messages=[
+                {"role": "user", "content": request_content}
+            ],
+            temperature=self.parameters.get('temperature', 0.7),
+            max_tokens=self.parameters.get('max_tokens', 4096),
+            top_p=self.parameters.get('top_p', 0.95)
+        )
+        return completion.choices[0].message.content
+
+class OllamaClient(LLMClient):
+    """Ollama APIクライアント"""
+    def __init__(self, model_config):
+        super().__init__(model_config)
+        self.endpoint = model_config['endpoint']
+        self.parameters = model_config.get('parameters', {})
+
+    def call_api(self, prompt, text):
+        import requests
+        request_content = f"{prompt}\n\n{text}"
+        response = requests.post(
+            self.endpoint,
+            json={
+                "model": self.model_config['model_name'],
+                "prompt": request_content,
+                "temperature": self.parameters.get('temperature', 0.7),
+                "context_length": self.parameters.get('context_length', 4096)
+            }
+        )
+        response.raise_for_status()
+        return response.json()['response']
 
 class AnthropicClient(LLMClient):
     """Anthropic APIクライアント"""
@@ -220,7 +265,7 @@ def get_llm_client(model_name=None):
     for p, models in config['models'].items():
         if model_name in models:
             model_config = models[model_name]
-            provider = p
+            provider = p if p != 'local' else model_config['provider']
             break
 
     if model_config is None:
@@ -229,6 +274,10 @@ def get_llm_client(model_name=None):
     # プロバイダに応じたクライアントを返す
     if provider == 'openai':
         return OpenAIClient(model_config)
+    elif provider == 'openai_compatible':
+        return OpenAICompatibleClient(model_config)
+    elif provider == 'ollama':
+        return OllamaClient(model_config)
     elif provider == 'anthropic':
         return AnthropicClient(model_config)
     elif provider == 'deepseek':
