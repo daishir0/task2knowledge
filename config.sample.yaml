@@ -1,0 +1,45 @@
+# データベース設定
+database:
+  path: /var/www/html/LLMKnowledge2/knowledge.db
+
+# 基本パラメーター
+parameters:
+  chunk_size: 2000        # 1チャンクの最小文字数
+  max_chunk_size: 3000    # 1チャンクの最大文字数
+  max_retries: 5          # APIリトライ回数
+  retry_delay: 5          # リトライ間隔（秒）
+  api_rate_limit: 0.5     # API呼び出し間隔（秒）
+  debug_mode: false       # デバッグモードの有効無効
+
+# LLMモデル設定
+models:
+  openai:
+    gpt-4o:
+      provider: openai
+      model_name: gpt-4o
+      api_key_env: OPENAI_API_KEY
+    gpt-4o-mini:
+      provider: openai
+      model_name: gpt-4o-mini
+      api_key_env: OPENAI_API_KEY
+  anthropic:
+    claude-3-sonnet:
+      provider: anthropic
+      model_name: claude-3-5-sonnet-latest
+      api_key_env: ANTHROPIC_API_KEY
+    claude-3-haiku:
+      provider: anthropic
+      model_name: claude-3-5-haiku-latest
+      api_key_env: ANTHROPIC_API_KEY
+  deepseek:
+    deepseek-chat:
+      provider: deepseek
+      model_name: deepseek-chat
+      api_key_env: DEEPSEEK_API_KEY
+    deepseek-reasoner:
+      provider: deepseek
+      model_name: deepseek-reasoner
+      api_key_env: DEEPSEEK_API_KEY
+
+# デフォルトモデル設定
+default_model: gpt-4o-mini

@@ -1,25 +1,31 @@
 import sqlite3
 import openai
+import anthropic
 import datetime
 import os
 import time
 import re
 import logging
+import yaml
 from logging.handlers import RotatingFileHandler
 
 # スクリプトの場所を取得
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# データベースパスを明示的に指定、必要に応じて変えること
-DATABASE_PATH = '/var/www/html/LLMKnowledge2/knowledge.db'
-API_KEY = os.environ.get('OPENAI_API_KEY', 'your-apikey-here')
 
-# 基本パラメーター
-CHUNK_SIZE = 2000        # 1チャンクの最小文字数
-MAX_CHUNK_SIZE = 3000   # 1チャンクの最大文字数
-MAX_RETRIES = 5         # APIリトライ回数
-RETRY_DELAY = 5         # リトライ間隔（秒）
-API_RATE_LIMIT = 0.5    # API呼び出し間隔（秒）
-DEBUG_MODE = False      # デバッグモードの有効無効
+# 設定ファイルを読み込む
+CONFIG_PATH = os.path.join(SCRIPT_DIR, "config.yaml")
+with open(CONFIG_PATH, 'r') as f:
+    config = yaml.safe_load(f)
+
+# 設定から値を取得
+DATABASE_PATH = config['database']['path']
+CHUNK_SIZE = config['parameters']['chunk_size']
+MAX_CHUNK_SIZE = config['parameters']['max_chunk_size']
+MAX_RETRIES = config['parameters']['max_retries']
+RETRY_DELAY = config['parameters']['retry_delay']
+API_RATE_LIMIT = config['parameters']['api_rate_limit']
+DEBUG_MODE = config['parameters']['debug_mode']
+DEFAULT_MODEL = config['default_model']
 
 # ログファイルの設定
 LOG_FILE = os.path.join(SCRIPT_DIR, "task2knowledge.log")
@@ -142,24 +148,105 @@ def split_text(text, min_chunk_size=CHUNK_SIZE, max_chunk_size=MAX_CHUNK_SIZE):
     logger.debug(f"Split text into {len(chunks)} chunks")
     return chunks
 
-def call_openai_api(client, prompt, text, retries=MAX_RETRIES):
-    """OpenAI APIを呼び出す（リトライ機能付き）"""
+class LLMClient:
+    """LLMクライアントの基底クラス"""
+    def __init__(self, model_config):
+        self.model_config = model_config
+        self.api_key = os.environ.get(model_config['api_key_env'])
+        if not self.api_key:
+            raise ValueError(f"API key not found in environment: {model_config['api_key_env']}")
+
+    def call_api(self, prompt, text):
+        raise NotImplementedError("Subclasses must implement call_api method")
+
+class OpenAIClient(LLMClient):
+    """OpenAI APIクライアント"""
+    def __init__(self, model_config):
+        super().__init__(model_config)
+        self.client = openai.OpenAI(api_key=self.api_key)
+
+    def call_api(self, prompt, text):
+        request_content = f"{prompt}\n\n{text}"
+        completion = self.client.chat.completions.create(
+            model=self.model_config['model_name'],
+            messages=[
+                {"role": "user", "content": request_content}
+            ]
+        )
+        return completion.choices[0].message.content
+
+class AnthropicClient(LLMClient):
+    """Anthropic APIクライアント"""
+    def __init__(self, model_config):
+        super().__init__(model_config)
+        self.client = anthropic.Client(api_key=self.api_key)
+
+    def call_api(self, prompt, text):
+        request_content = f"{prompt}\n\n{text}"
+        message = self.client.messages.create(
+            model=self.model_config['model_name'],
+            messages=[{
+                "role": "user",
+                "content": request_content
+            }]
+        )
+        return message.content
+
+class DeepSeekClient(LLMClient):
+    """DeepSeek APIクライアント"""
+    def __init__(self, model_config):
+        super().__init__(model_config)
+        self.client = deepseek.Client(api_key=self.api_key)
+
+    def call_api(self, prompt, text):
+        request_content = f"{prompt}\n\n{text}"
+        response = self.client.chat.completions.create(
+            model=self.model_config['model_name'],
+            messages=[{
+                "role": "user",
+                "content": request_content
+            }]
+        )
+        return response.choices[0].message.content
+
+def get_llm_client(model_name=None):
+    """LLMクライアントを取得する"""
+    if model_name is None:
+        model_name = DEFAULT_MODEL
+
+    # モデル設定を探す
+    model_config = None
+    provider = None
+    for p, models in config['models'].items():
+        if model_name in models:
+            model_config = models[model_name]
+            provider = p
+            break
+
+    if model_config is None:
+        raise ValueError(f"Model configuration not found for: {model_name}")
+
+    # プロバイダに応じたクライアントを返す
+    if provider == 'openai':
+        return OpenAIClient(model_config)
+    elif provider == 'anthropic':
+        return AnthropicClient(model_config)
+    elif provider == 'deepseek':
+        return DeepSeekClient(model_config)
+    else:
+        raise ValueError(f"Unknown provider: {provider}")
+
+def call_llm_api(client, prompt, text, retries=MAX_RETRIES):
+    """LLM APIを呼び出す（リトライ機能付き）"""
     logger.debug("Preparing API request...")
-    request_content = f"{prompt}\n\n{text}"
     logger.info("\n=== API Request ===")
-    logger.info(request_content)
+    logger.info(f"{prompt}\n\n{text}")
     logger.info("==================")
 
     for attempt in range(retries):
         try:
             logger.debug(f"Attempt {attempt + 1} of {retries}")
-            completion = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "user", "content": request_content}
-                ]
-            )
-            response = completion.choices[0].message.content
+            response = client.call_api(prompt, text)
             logger.debug("API request successful")
             logger.info("\n=== API Response ===")
             logger.info(response)
@@ -226,10 +313,9 @@ def log_knowledge_history(cursor, knowledge_id, data):
     logger.debug("History logged successfully")
 
 def main():
-
-    logger.debug("Initializing OpenAI client")
-    # OpenAIクライアントを初期化
-    client = openai.OpenAI(api_key=API_KEY)
+    logger.debug("Initializing LLM client")
+    # LLMクライアントを初期化
+    client = get_llm_client()
 
     logger.debug("Connecting to database")
     # SQLiteデータベースに接続
@@ -284,7 +370,7 @@ def main():
                 
                 try:
                     # APIを呼び出し
-                    response = call_openai_api(client, prompt_content, chunk)
+                    response = call_llm_api(client, prompt_content, chunk)
                     if response:
                         all_responses.append(response)
                     

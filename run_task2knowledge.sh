@@ -9,13 +9,13 @@
 
 # スクリプトの絶対パスと、ロックファイル。初期設定時に変えること(TODO)
 # 同時実行プロセス数の設定（デフォルト値: 3）
-MAX_PARALLEL_PROCESSES=3
+MAX_PARALLEL_PROCESSES=10
 # プロセス間の待機時間（秒）
 WAIT_INTERVAL=3
 
 source /home/ec2-user/anaconda3/bin/activate base
 
-SCRIPT_PATH="/var/www/html/LLMKnowledge2/common/task2knowledge.py"
+SCRIPT_PATH="/home/ec2-user/task2knowledge/task2knowledge.py"
 BASE_LOCK_FILE="/tmp/task2knowledge"
 
 # 現在実行中のプロセス数をカウント

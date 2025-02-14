@@ -1,5 +1,10 @@
 ## Overview
-task2knowledge is a Python script that processes tasks from the LLMKnowledge2 system database using OpenAI's GPT model. It automatically retrieves pending tasks, processes them using AI, and stores the results as knowledge entries in the database. The script includes features such as text chunking, language detection, and comprehensive logging.
+task2knowledge is a Python script that processes tasks from the LLMKnowledge2 system database using various LLM models (OpenAI GPT, Anthropic Claude, DeepSeek). It automatically retrieves pending tasks, processes them using AI, and stores the results as knowledge entries in the database. The script includes features such as text chunking, language detection, and comprehensive logging.
+
+## Supported LLM Models
+- OpenAI: gpt-4o, gpt-4o-mini (default)
+- Anthropic: claude-3-5-sonnet-latest, claude-3-5-haiku-latest
+- DeepSeek: deepseek-chat, deepseek-reasoner
 
 ## Installation
 1. Clone the repository:
@@ -13,11 +18,54 @@ cd task2knowledge
 pip install -r requirements.txt
 ```
 
-3. Set up your environment:
-   - Configure the database path in the script (DATABASE_PATH)
-   - Set your OpenAI API key as an environment variable:
+3. Set up your configuration:
+   - Copy the sample configuration file:
+   ```bash
+   cp config.sample.yaml config.yaml
+   ```
+   - Edit config.yaml to set your database path and other parameters
+   - Configure your preferred LLM model (default is gpt-4o-mini)
+
+4. Set up your environment variables for the LLM APIs you plan to use:
 ```bash
-export OPENAI_API_KEY='your-api-key'
+# For OpenAI models
+export OPENAI_API_KEY='your-openai-api-key'
+
+# For Anthropic models
+export ANTHROPIC_API_KEY='your-anthropic-api-key'
+
+# For DeepSeek models
+export DEEPSEEK_API_KEY='your-deepseek-api-key'
+```
+
+## Configuration
+The config.yaml file contains all configurable settings:
+
+```yaml
+# Database settings
+database:
+  path: /path/to/your/database.db
+
+# Basic parameters
+parameters:
+  chunk_size: 2000        # Minimum characters per chunk
+  max_chunk_size: 3000    # Maximum characters per chunk
+  max_retries: 5          # API retry count
+  retry_delay: 5          # Retry interval (seconds)
+  api_rate_limit: 0.5     # API call interval (seconds)
+  debug_mode: false       # Debug mode toggle
+
+# LLM model settings
+models:
+  openai:
+    gpt-4o:
+      provider: openai
+      model_name: gpt-4o
+      api_key_env: OPENAI_API_KEY
+    # ... other models
+
+# Default model setting
+default_model: gpt-4o-mini
 ```
 
 ## Usage
@@ -37,7 +85,7 @@ crontab -e
 
 The script will:
 - Fetch pending tasks from the database
-- Process text using OpenAI's API
+- Process text using the configured LLM model
 - Save results as knowledge entries
 - Log all operations to task2knowledge.log
 
@@ -47,6 +95,9 @@ The script will:
 - Implements retry mechanism for API calls
 - Maintains detailed logs in the script's directory
 - Requires access to LLMKnowledge2 system database
+- Configuration is now externalized in config.yaml
+- Supports multiple LLM providers and models
+- Supports parallel processing through run_task2knowledge.sh
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
@@ -56,7 +107,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 # task2knowledge
 
 ## 概要
-task2knowledgeは、LLMKnowledge2システムのデータベースからタスクを処理するPythonスクリプトです。OpenAIのGPTモデルを使用して、保留中のタスクを自動的に取得し、AI処理を行い、その結果をナレッジとしてデータベースに保存します。テキストの分割処理、言語検出、包括的なログ機能を備えています。
+task2knowledgeは、LLMKnowledge2システムのデータベースからタスクを処理するPythonスクリプトです。OpenAI GPT、Anthropic Claude、DeepSeekなど、様々なLLMモデルを使用して、保留中のタスクを自動的に取得し、AI処理を行い、その結果をナレッジとしてデータベースに保存します。テキストの分割処理、言語検出、包括的なログ機能を備えています。
+
+## 対応LLMモデル
+- OpenAI: gpt-4o, gpt-4o-mini（デフォルト）
+- Anthropic: claude-3-5-sonnet-latest, claude-3-5-haiku-latest
+- DeepSeek: deepseek-chat, deepseek-reasoner
 
 ## インストール方法
 1. レポジトリをクローンします：
@@ -70,11 +126,54 @@ cd task2knowledge
 pip install -r requirements.txt
 ```
 
-3. 環境を設定します：
-   - スクリプト内でデータベースパスを設定 (DATABASE_PATH)
-   - OpenAI APIキーを環境変数として設定：
+3. 設定を行います：
+   - サンプル設定ファイルをコピーします：
+   ```bash
+   cp config.sample.yaml config.yaml
+   ```
+   - config.yamlを編集してデータベースパスなどのパラメータを設定します
+   - 使用したいLLMモデルを設定します（デフォルトはgpt-4o-mini）
+
+4. 使用するLLM APIの環境変数を設定します：
 ```bash
-export OPENAI_API_KEY='your-api-key'
+# OpenAIモデル用
+export OPENAI_API_KEY='your-openai-api-key'
+
+# Anthropicモデル用
+export ANTHROPIC_API_KEY='your-anthropic-api-key'
+
+# DeepSeekモデル用
+export DEEPSEEK_API_KEY='your-deepseek-api-key'
+```
+
+## 設定
+config.yamlファイルには以下の設定が含まれています：
+
+```yaml
+# データベース設定
+database:
+  path: /path/to/your/database.db
+
+# 基本パラメーター
+parameters:
+  chunk_size: 2000        # 1チャンクの最小文字数
+  max_chunk_size: 3000    # 1チャンクの最大文字数
+  max_retries: 5          # APIリトライ回数
+  retry_delay: 5          # リトライ間隔（秒）
+  api_rate_limit: 0.5     # API呼び出し間隔（秒）
+  debug_mode: false       # デバッグモードの有効無効
+
+# LLMモデル設定
+models:
+  openai:
+    gpt-4o:
+      provider: openai
+      model_name: gpt-4o
+      api_key_env: OPENAI_API_KEY
+    # ... その他のモデル
+
+# デフォルトモデル設定
+default_model: gpt-4o-mini
 ```
 
 ## 使い方
@@ -94,7 +193,7 @@ crontab -e
 
 スクリプトは以下の処理を行います：
 - データベースから保留中のタスクを取得
-- OpenAI APIを使用してテキスト処理
+- 設定されたLLMモデルを使用してテキスト処理
 - 結果をナレッジとして保存
 - すべての操作をtask2knowledge.logに記録
 
@@ -104,6 +203,9 @@ crontab -e
 - API呼び出しの再試行機能を実装
 - スクリプトのディレクトリに詳細なログを保持
 - LLMKnowledge2システムのデータベースへのアクセスが必要
+- 設定はconfig.yamlに外部化
+- 複数のLLMプロバイダーとモデルに対応
+- run_task2knowledge.shによる並列処理に対応
 
 ## ライセンス
 このプロジェクトはMITライセンスの下でライセンスされています。詳細はLICENSEファイルを参照してください。

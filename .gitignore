@@ -1,3 +1,4 @@
-run_task2knowledge.sh
 task2knowledge.log
-task2knowledge.py
+config.yaml
+__pycache__/
+*.pyc
