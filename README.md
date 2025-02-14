@@ -23,20 +23,11 @@ pip install -r requirements.txt
    ```bash
    cp config.sample.yaml config.yaml
    ```
-   - Edit config.yaml to set your database path and other parameters
-   - Configure your preferred LLM model (default is gpt-4o-mini)
-
-4. Set up your environment variables for the LLM APIs you plan to use:
-```bash
-# For OpenAI models
-export OPENAI_API_KEY='your-openai-api-key'
-
-# For Anthropic models
-export ANTHROPIC_API_KEY='your-anthropic-api-key'
-
-# For DeepSeek models
-export DEEPSEEK_API_KEY='your-deepseek-api-key'
-```
+   - Edit config.yaml to set:
+     - Database path
+     - Basic parameters
+     - API keys for your LLM models
+     - Your preferred default model
 
 ## Configuration
 The config.yaml file contains all configurable settings:
@@ -61,8 +52,12 @@ models:
     gpt-4o:
       provider: openai
       model_name: gpt-4o
-      api_key_env: OPENAI_API_KEY
-    # ... other models
+      api_key: your-openai-api-key-here
+    gpt-4o-mini:
+      provider: openai
+      model_name: gpt-4o-mini
+      api_key: your-openai-api-key-here
+  # ... other models
 
 # Default model setting
 default_model: gpt-4o-mini
@@ -131,20 +126,11 @@ pip install -r requirements.txt
    ```bash
    cp config.sample.yaml config.yaml
    ```
-   - config.yamlを編集してデータベースパスなどのパラメータを設定します
-   - 使用したいLLMモデルを設定します（デフォルトはgpt-4o-mini）
-
-4. 使用するLLM APIの環境変数を設定します：
-```bash
-# OpenAIモデル用
-export OPENAI_API_KEY='your-openai-api-key'
-
-# Anthropicモデル用
-export ANTHROPIC_API_KEY='your-anthropic-api-key'
-
-# DeepSeekモデル用
-export DEEPSEEK_API_KEY='your-deepseek-api-key'
-```
+   - config.yamlを編集して以下を設定します：
+     - データベースパス
+     - 基本パラメーター
+     - 使用するLLMモデルのAPIキー
+     - デフォルトのモデル
 
 ## 設定
 config.yamlファイルには以下の設定が含まれています：
@@ -169,8 +155,12 @@ models:
     gpt-4o:
       provider: openai
       model_name: gpt-4o
-      api_key_env: OPENAI_API_KEY
-    # ... その他のモデル
+      api_key: your-openai-api-key-here
+    gpt-4o-mini:
+      provider: openai
+      model_name: gpt-4o-mini
+      api_key: your-openai-api-key-here
+  # ... その他のモデル
 
 # デフォルトモデル設定
 default_model: gpt-4o-mini

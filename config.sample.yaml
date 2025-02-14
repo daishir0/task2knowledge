@@ -17,29 +17,29 @@ models:
     gpt-4o:
       provider: openai
       model_name: gpt-4o
-      api_key_env: OPENAI_API_KEY
+      api_key: your-openai-api-key-here
     gpt-4o-mini:
       provider: openai
       model_name: gpt-4o-mini
-      api_key_env: OPENAI_API_KEY
+      api_key: your-openai-api-key-here
   anthropic:
     claude-3-sonnet:
       provider: anthropic
       model_name: claude-3-5-sonnet-latest
-      api_key_env: ANTHROPIC_API_KEY
+      api_key: your-anthropic-api-key-here
     claude-3-haiku:
       provider: anthropic
       model_name: claude-3-5-haiku-latest
-      api_key_env: ANTHROPIC_API_KEY
+      api_key: your-anthropic-api-key-here
   deepseek:
     deepseek-chat:
       provider: deepseek
       model_name: deepseek-chat
-      api_key_env: DEEPSEEK_API_KEY
+      api_key: your-deepseek-api-key-here
     deepseek-reasoner:
       provider: deepseek
       model_name: deepseek-reasoner
-      api_key_env: DEEPSEEK_API_KEY
+      api_key: your-deepseek-api-key-here
 
 # デフォルトモデル設定
 default_model: gpt-4o-mini

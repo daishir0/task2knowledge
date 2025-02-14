@@ -152,9 +152,9 @@ class LLMClient:
     """LLMクライアントの基底クラス"""
     def __init__(self, model_config):
         self.model_config = model_config
-        self.api_key = os.environ.get(model_config['api_key_env'])
+        self.api_key = model_config['api_key']
         if not self.api_key:
-            raise ValueError(f"API key not found in environment: {model_config['api_key_env']}")
+            raise ValueError(f"API key not found in config for model: {model_config['model_name']}")
 
     def call_api(self, prompt, text):
         raise NotImplementedError("Subclasses must implement call_api method")
