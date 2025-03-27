@@ -14,7 +14,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 設定ファイルを読み込む
 CONFIG_PATH = os.path.join(SCRIPT_DIR, "config.yaml")
-with open(CONFIG_PATH, 'r') as f:
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)
 
 # 設定から値を取得
